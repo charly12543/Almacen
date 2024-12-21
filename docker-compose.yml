@@ -1,0 +1,77 @@
+version: "2.0"
+
+services:
+  eureka-server:
+    build: eureka-server
+    mem_limit: 512m
+    ports:
+      - "8761:8761"
+    networks:
+      - almacen-network
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+
+  productos:
+    build: productos
+    mem_limit: 512m
+    ports:
+      - "8085:8085"
+    networks:
+      - almacen-network
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  ventas-service:
+    build: ventas-service
+    mem_limit: 512m
+    ports:
+      - "8087:8087"
+    networks:
+      - almacen-network
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  carrito-compras:
+    build: carrito-compras
+    mem_limit: 512m
+    ports:
+      - "8086:8086"
+    networks:
+      - almacen-network
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  api-gateway:
+    build: api-gateway
+    mem_limit: 512m
+    ports:
+      - "801:801"
+    networks:
+      - almacen-network
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  config-server:
+    build: config-server
+    mem_limit: 512m
+    ports:
+      - "8888:8888"
+    networks:
+      - almacen-network
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+networks:
+  almacen-network:

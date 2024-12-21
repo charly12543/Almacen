@@ -7,21 +7,21 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="EurekaServer" />
         <module name="api-gateway" />
         <module name="ventas" />
         <module name="config-server" />
         <module name="carrito-compras" />
         <module name="productos" />
+        <module name="eureka-server" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="EurekaServer" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
       <module name="carrito-compras" options="-parameters" />
       <module name="config-server" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
       <module name="productos" options="-parameters" />
       <module name="ventas" options="-parameters" />
     </option>
