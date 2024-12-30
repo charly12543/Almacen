@@ -117,7 +117,7 @@ public class CarritoService implements ICarritoService {
 
 
     /**
-     * Metodo para econtrar mediante la coneccion de Feign un producto mediante su nombre
+     * Metodo para econtrar mediante la conexion de Feign un producto mediante su nombre
      * @param nombre
      * @return
      */

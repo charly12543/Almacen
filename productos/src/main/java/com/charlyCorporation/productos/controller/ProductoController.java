@@ -87,4 +87,15 @@ public class ProductoController {
         return ResponseEntity.ok("Exito en la eliminacion del producto");
     }
 
+    @GetMapping("/no-seguro")
+    public String noSeguro(){
+        return "Mensaje NO seguro";
+    }
+
+    @GetMapping("/seguro")
+    public String seguro(){
+        return "Mensaje SI seguro";
+    }
+
+
 }
