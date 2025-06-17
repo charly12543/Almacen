@@ -5,7 +5,6 @@ import com.charlyCorporation.productos.repository.IProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +12,7 @@ import java.util.Optional;
  * Clase que implementa los metodos de la interfaz IProductoService
  */
 @Service
-public class ProductoService implements IProductoService{
+public class ProdImp implements IProdService {
 
     /**
      * Inyeccion de dependecia
@@ -37,8 +36,8 @@ public class ProductoService implements IProductoService{
      * @param producto
      */
     @Override
-    public void saveProducto(Producto producto) {
-        repo.save(producto);
+    public Producto saveProducto(Producto producto) {
+        return repo.save(producto);
 
     }
 
@@ -48,9 +47,9 @@ public class ProductoService implements IProductoService{
      * @return
      */
     @Override
-    public Producto findProducto(Long idProducto) {
+    public Optional<Producto> findProducto(Long idProducto) {
 
-        return repo.findById(idProducto).orElseGet(null);
+        return repo.findById(idProducto);
     }
 
     /**
@@ -77,14 +76,14 @@ public class ProductoService implements IProductoService{
                                  String marca,
                                  double precio) {
 
-        Producto prod = this.findProducto(idProducto);
-        prod.setNombre(nombre);
-        prod.setMarca(marca);
-        prod.setPrecio(precio);
+        Optional<Producto> prod = this.findProducto(idProducto);
+        prod.get().setNombre(nombre);
+        prod.get().setMarca(marca);
+        prod.get().setPrecio(precio);
 
-        this.saveProducto(prod);
+        this.saveProducto(prod.orElse(null));
 
-        return prod;
+        return prod.orElse(null);
 
     }
 
@@ -94,10 +93,12 @@ public class ProductoService implements IProductoService{
      * @return
      */
     @Override
-    public List<Producto> findProductoByNombre(String nombre) {
+    public Optional<List<Producto>> findProductoByNombre(String nombre) {
         List<Producto> producto = repo.findProductoByNombre(nombre);
-        return producto;
+        if(producto.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(producto);
     }
-
 
 }

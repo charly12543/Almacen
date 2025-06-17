@@ -1,4 +1,4 @@
-package com.charlyCorporation.ventas.repository;
+package com.charlyCorporation.ventas.client;
 
 import com.charlyCorporation.ventas.dto.CarritoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -17,5 +17,5 @@ public interface ICarritoClient {
      * @return
      */
     @GetMapping("/carrito/find/{idCarrito}")
-    public CarritoDTO find(@PathVariable Long idCarrito);
+    CarritoDTO find(@PathVariable Long idCarrito);
 }

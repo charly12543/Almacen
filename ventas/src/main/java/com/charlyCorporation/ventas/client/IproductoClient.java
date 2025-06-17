@@ -1,4 +1,4 @@
-package com.charlyCorporation.ventas.repository;
+package com.charlyCorporation.ventas.client;
 
 import com.charlyCorporation.ventas.dto.ProductosDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,7 +11,7 @@ import java.util.List;
 public interface IproductoClient {
 
     @GetMapping("producto/findByNombre/{nombre}")
-    public  List<ProductosDTO> findByNombre(@PathVariable String nombre);
+    List<ProductosDTO> findByNombre(@PathVariable String nombre);
 
 
 }

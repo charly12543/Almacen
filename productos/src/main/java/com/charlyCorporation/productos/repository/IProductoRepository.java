@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * Interfaz que exitiende la hereda de la clase Abstracta JpaRepository los metodos abstractos
+ * Interfaz que hereda de la clase Abstracta JpaRepository sus metodos abstractos
  */
 @Repository
 public interface IProductoRepository extends JpaRepository<Producto,Long>{

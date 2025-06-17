@@ -4,19 +4,22 @@ import com.charlyCorporation.ventas.dto.VentasDTO;
 import com.charlyCorporation.ventas.model.Ventas;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Interfaz que contiene los metodos genericos
  */
 public interface IVentasService {
 
-    public void saveVenta(Ventas ventas);
+    Ventas saveVenta(Ventas ventas);
 
-    public List<Ventas> listVentas();
+     List<Ventas> listVentas();
 
-    public Ventas find(Long idVenta);
+    Optional<Ventas> find(Long idVenta);
 
-    public VentasDTO findById(Long idVenta);
+    Optional<VentasDTO> findById(Long idVenta);
+
+    void delete(Long id);
 
 
 }

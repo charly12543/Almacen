@@ -1,8 +1,8 @@
-package com.charlyCorporation.productos.security.config;
+package com.charlyCorporation.ventas.security.config;
 
-import jakarta.ws.rs.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,10 +22,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import java.util.ArrayList;
 import java.util.List;
 
-@EnableMethodSecurity
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+
 
         @Bean
         public SecurityFilterChain filterChain (HttpSecurity httpSecurity) throws Exception {
@@ -33,13 +34,13 @@ public class SecurityConfig {
                     .csrf(csrf -> csrf.disable())
                     .httpBasic(Customizer.withDefaults())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                   /* .authorizeHttpRequests(http -> {
-                        // Endpoints públicos
-                        http.requestMatchers(HttpMethod.GET, "/producto/no-seguro").permitAll();
-                        http.requestMatchers(HttpMethod.GET, "/producto/listProductos").hasAuthority("READ");
+                  /*  .authorizeHttpRequests(http -> {
+                        http.requestMatchers(HttpMethod.GET, "/ventas/list").permitAll();
+                        http.requestMatchers(HttpMethod.POST, "/ventas/save").hasAuthority("CREATE");
                         http.anyRequest().denyAll();
-                    }) */
+                            })  */
                     .build();
+
         }
 
         @Bean
@@ -62,15 +63,14 @@ public class SecurityConfig {
             return NoOpPasswordEncoder.getInstance();
         }
 
-        @Bean
         public UserDetailsService userDetailsService(){
-            List userDetailsList = new ArrayList();
+           List userDetailsList = new ArrayList<>();
 
             userDetailsList.add(User.withUsername("charly")
-                    .password("123")
-                    .roles("ADMIN")
-                    .authorities("CREATE", "READ", "UPDATE", "DELETE")
-                    .build());
+                   .password("123")
+                   .roles("ADMIN")
+                   .authorities("READ", "UPDATE", "DELETE", "CREATE")
+                   .build());
 
             userDetailsList.add(User.withUsername("karen")
                     .password("123")

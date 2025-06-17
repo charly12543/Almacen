@@ -6,16 +6,20 @@ import com.charlyCorporation.carrito_compras.model.Carrito;
 import com.charlyCorporation.carrito_compras.service.ICarritoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Clase controladora que contien los End-points
  */
 @RestController
 @RequestMapping("/carrito")
+@PreAuthorize("denyAll()")
 public class CarritoController {
 
     /**
@@ -36,9 +40,9 @@ public class CarritoController {
      * @return
      */
     @PostMapping("/save")
-    public String saveCarrito(@RequestBody CarritoDTO d){
-        service.saveCarrito(d.getIdCarrito(),d.getNomProductos());
-        return "Exito en el guardado";
+    public ResponseEntity<?> saveCarrito(@RequestBody CarritoDTO d){
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                (service.saveCarrito(d.getIdCarrito(),d.getNomProductos())));
     }
 
     /**
@@ -46,9 +50,9 @@ public class CarritoController {
      * @return
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('READ')")
     public ResponseEntity<List<Carrito>> listaCarrito(){
-        List<Carrito> lista = service.getCarrito();
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(service.getCarrito());
     }
 
     /**
@@ -57,9 +61,9 @@ public class CarritoController {
      * @return
      */
     @GetMapping("/findByNombre/{nombre}")
-    public List<ProductosDTO> findByNombre(@PathVariable String nombre ){
+    public ResponseEntity<?> findByNombre(@PathVariable String nombre ){
         List<ProductosDTO> list = service.findNombre(nombre);
-        return list;
+        return ResponseEntity.ok(list);
     }
 
     /**
@@ -68,9 +72,12 @@ public class CarritoController {
      * @return
      */
     @GetMapping("/find/{idCarrito}")
-    public Carrito find(@PathVariable Long idCarrito){
-        Carrito car = service.findById(idCarrito);
-        return car;
+    public ResponseEntity<?> find(@PathVariable Long idCarrito){
+        Optional<Carrito> car = service.findById(idCarrito);
+        if(car.isPresent()){
+            return ResponseEntity.ok(car);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     /**
@@ -80,12 +87,12 @@ public class CarritoController {
      * @return
      */
     @PutMapping("/add/{idCarrito}")
-    public Carrito  addProdToCar(@PathVariable long idCarrito,
+    public ResponseEntity<?> addProdToCar(@PathVariable long idCarrito,
                                  @RequestParam(required = false, name = "nombre")
                                  String nomProductos){
-        Carrito dto = service.addProdToCarrito(idCarrito,nomProductos);
         System.out.println("Probando el balanceador " + serverPort);
-        return dto;
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(service.addProdToCarrito(idCarrito,nomProductos));
     }
 
     /**
@@ -95,11 +102,11 @@ public class CarritoController {
      * @return
      */
     @PutMapping("/remove/{idCarrito}")
-    public Carrito removeProdToCar(@PathVariable long idCarrito,
+    public ResponseEntity<?> removeProdToCar(@PathVariable long idCarrito,
                                  @RequestParam(required = false, name = "nombre")
                                  String nomProductos){
-        Carrito dto = service.deleteProd(idCarrito,nomProductos);
-        return dto;
+        service.deleteProd(idCarrito,nomProductos);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -108,9 +115,14 @@ public class CarritoController {
      * @return
      */
     @GetMapping("/delete/{idCarrito}")
-    public String deleteCar(@PathVariable Long idCarrito){
-        service.deleteAllCar(idCarrito);
-        return "Eliminado con exito";
+    public ResponseEntity<?> deleteCar(@PathVariable Long idCarrito){
+        Optional<Carrito> car = service.findById(idCarrito);
+        if(car.isPresent()) {
+            service.deleteAllCar(idCarrito);
+            return ResponseEntity.noContent().build();
+
+        }
+        return ResponseEntity.notFound().build();
     }
 
 

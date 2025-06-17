@@ -1,24 +1,23 @@
 package com.charlyCorporation.carrito_compras.service;
 
-import com.charlyCorporation.carrito_compras.dto.CarritoDTO;
+import com.charlyCorporation.carrito_compras.client.IProductosClient;
 import com.charlyCorporation.carrito_compras.dto.ProductosDTO;
 import com.charlyCorporation.carrito_compras.model.Carrito;
 import com.charlyCorporation.carrito_compras.repository.ICarritoRepository;
-import com.charlyCorporation.carrito_compras.repository.IProductosClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Clase que implementa los metodos de ICarritoService
  */
 @Service
-public class CarritoService implements ICarritoService {
+public class CarritoImp implements ICarritoService {
 
     /**
      * Inyeccion de dependencias
@@ -37,8 +36,9 @@ public class CarritoService implements ICarritoService {
      * @param car
      */
     @Override
-    public void save(Carrito car) {
-        repo.save(car);
+    public Carrito save(Carrito car) {
+
+        return repo.save(car);
     }
 
     /**
@@ -47,8 +47,8 @@ public class CarritoService implements ICarritoService {
      * @param listProductos
      */
     @Override
-    public void saveCarrito(Long idCarrito,
-                            String listProductos) {
+    public Carrito saveCarrito(Long idCarrito,
+                               String listProductos) {
 
 
         List<String> listProd = new ArrayList<>();
@@ -62,7 +62,7 @@ public class CarritoService implements ICarritoService {
         car.setPrecioTotal(precio);
         car.setNomProductos(listProd);
 
-        repo.save(car);
+        return repo.save(car);
     }
 
     /**
@@ -81,8 +81,8 @@ public class CarritoService implements ICarritoService {
      * @return
      */
     @Override
-    public Carrito findById(Long idCarrito) {
-        Carrito car = repo.findById(idCarrito).orElse(null);
+    public Optional<Carrito> findById(Long idCarrito) {
+        Optional<Carrito> car = repo.findById(idCarrito);
         return car;
     }
 
@@ -96,22 +96,24 @@ public class CarritoService implements ICarritoService {
     @CircuitBreaker(name = "productos", fallbackMethod = "FallbackAddProdToCarrito")
     @Retry(name = "productos")
     @Override
-    public Carrito addProdToCarrito(long idCarrito, String nomProductos) {
+    public Optional<Carrito> addProdToCarrito(long idCarrito, String nomProductos) {
 
-        Carrito car = this.findById(idCarrito);
+        Optional<Carrito> car = this.findById(idCarrito);
         List<ProductosDTO> lisProd = this.findNombre(nomProductos);
-        List<String> nuevosProd = car.getNomProductos();
-        Double precioFinal = car.getPrecioTotal() + lisProd.get(0).getPrecio();
+        List<String> nuevosProd = car.get().getNomProductos();
+        Double precioFinal = car.get().getPrecioTotal() + lisProd.get(0).getPrecio();
         String nuevoNombre = lisProd.get(0).getNombre();
         nuevosProd.add(nuevoNombre);
 
-            car.setIdCarrito(idCarrito);
-            car.setPrecioTotal(precioFinal);
-            car.setNomProductos(nuevosProd);
+        Carrito carrito = car.get();
 
-            this.save(car);
+        carrito.setIdCarrito(idCarrito);
+        carrito.setPrecioTotal(precioFinal);
+        carrito.setNomProductos(nuevosProd);
 
-            return car;
+        this.save(carrito);
+
+        return car;
 
     }
 
@@ -156,19 +158,20 @@ public class CarritoService implements ICarritoService {
     @Override
     public Carrito deleteProd(long idCarrito, String nomProductos) {
 
-        Carrito car = this.findById(idCarrito);
+        Optional<Carrito> car = this.findById(idCarrito);
         List<ProductosDTO> prodDTO = this.findNombre(nomProductos);
-        Double precioFinal = car.getPrecioTotal() - prodDTO.get(0).getPrecio();
-        List<String> nuevaList = car.getNomProductos();
+        Double precioFinal = car.get().getPrecioTotal() - prodDTO.get(0).getPrecio();
+        List<String> nuevaList = car.get().getNomProductos();
         nuevaList.remove(nomProductos);
 
-        car.setIdCarrito(idCarrito);
-        car.setPrecioTotal(precioFinal);
-        car.setNomProductos(nuevaList);
+        Carrito carrito = car.get();
+        carrito.setIdCarrito(idCarrito);
+        carrito.setPrecioTotal(precioFinal);
+        carrito.setNomProductos(nuevaList);
 
-        this.save(car);
+        this.save(carrito);
 
-        return car;
+        return carrito;
     }
 
     /**
@@ -189,5 +192,3 @@ public class CarritoService implements ICarritoService {
         return new ProductosDTO(99999L, "Error", "Error",00.00);
     }
 }
-
-

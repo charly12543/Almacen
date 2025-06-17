@@ -1,14 +1,19 @@
 package com.charlyCorporation.productos.controller;
 
 import com.charlyCorporation.productos.model.Producto;
-import com.charlyCorporation.productos.service.IProductoService;
+import com.charlyCorporation.productos.service.IProdService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.repository.config.RepositoryNameSpaceHandler;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -16,13 +21,15 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/producto")
+@PreAuthorize("denyALL()")
 public class ProductoController {
 
     /**
      * Inyeccion de Dependencias
      */
     @Autowired
-    private IProductoService service;
+    private IProdService service;
+
 
     /**
      * Inyectamos el valor del puerto de ejecucion en una variable
@@ -36,9 +43,17 @@ public class ProductoController {
      * @return
      */
     @PostMapping("/save")
-    public ResponseEntity<Producto> saveProducto(@RequestBody Producto prod){
-        service.saveProducto(prod);
-        return ResponseEntity.ok(prod);
+    public ResponseEntity<?> saveProducto(@Valid @RequestBody Producto prod,
+                                          BindingResult result){
+        Map<String, String> errores = new HashMap<>();
+        if(result.hasErrors()){
+            result.getFieldErrors().forEach(err -> {
+                errores.put(err.getField(), "Error! " + err.getField() +
+                        " : "  + err.getDefaultMessage());
+            });
+            return ResponseEntity.badRequest().body(errores);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.saveProducto(prod));
     }
 
     /**
@@ -46,9 +61,12 @@ public class ProductoController {
      * @return
      */
     @GetMapping("/listProductos")
-    private ResponseEntity<List<Producto>> getProductos(){
-      List<Producto> lista = service.getProductos();
-        return ResponseEntity.ok(lista);
+    @PreAuthorize("hasAuthority('READ')")
+    private ResponseEntity<?> getProductos(){
+        if (service == null) {
+            System.out.println(">>> ERROR: service es null <<<");
+        }
+        return ResponseEntity.ok(service.getProductos());
     }
 
     /**
@@ -57,9 +75,11 @@ public class ProductoController {
      * @return
      */
     @GetMapping("/find/{idProducto}")
-    public Producto findById(@PathVariable Long idProducto){
-        Producto prod = service.findProducto(idProducto);
-        return prod;
+    public ResponseEntity<?> findById(@PathVariable Long idProducto){
+        Optional<Producto> prod = service.findProducto(idProducto);
+        return prod.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+
 
     }
 
@@ -69,11 +89,12 @@ public class ProductoController {
      * @return
      */
     @GetMapping("/findByNombre/{nombre}")
-    public  List<Producto> findByNombre(@PathVariable String nombre){
-        List<Producto> producto = service.findProductoByNombre(nombre);
+    public  ResponseEntity<?> findByNombre(@PathVariable String nombre){
+        Optional<List<Producto>> prod = service.findProductoByNombre(nombre);
         //Mensaje para probar el puerto donde se esta ejecutando el balanceador de carga
         System.out.println("Probando el balanceador: estoy en el puerto = " + serverPort);
-        return producto;
+        return prod.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
@@ -82,11 +103,16 @@ public class ProductoController {
      * @return
      */
     @DeleteMapping("/delete/{idProducto}")
-    public ResponseEntity<String> deleteProd(@PathVariable Long idProducto){
-        service.deleteProducto(idProducto);
-        return ResponseEntity.ok("Exito en la eliminacion del producto");
+    public ResponseEntity<?> deleteProd(@PathVariable Long idProducto){
+        Optional<Producto> p = service.findProducto(idProducto);
+        if(p.isPresent()){
+            service.deleteProducto(idProducto);
+            return ResponseEntity.ok("Exito en la eliminacion del producto");
+        }
+        return ResponseEntity.notFound().build();
     }
 
+    //End-points de prueba para el uso de los permisos
     @GetMapping("/no-seguro")
     public String noSeguro(){
         return "Mensaje NO seguro";

@@ -1,8 +1,7 @@
-package com.charlyCorporation.carrito_compras.repository;
+package com.charlyCorporation.carrito_compras.client;
 
 import com.charlyCorporation.carrito_compras.dto.ProductosDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 

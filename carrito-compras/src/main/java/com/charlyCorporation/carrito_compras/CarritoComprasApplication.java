@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.charlyCorporation.carrito_compras.client")
 public class CarritoComprasApplication {
 
 	public static void main(String[] args) {
