@@ -1,9 +1,7 @@
 package com.charlyCorporation.productos.controller;
 
 import com.charlyCorporation.productos.model.Producto;
-import com.charlyCorporation.productos.service.IProdService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +20,12 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/producto")
 @PreAuthorize("denyALL()")
-public class ProductoController {
+public class ProductosController {
 
     /**
      * Inyeccion de Dependencias
      */
-    @Autowired
-    private IProdService service;
+
 
 
     /**
