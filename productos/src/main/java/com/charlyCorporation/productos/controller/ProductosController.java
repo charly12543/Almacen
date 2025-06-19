@@ -1,7 +1,9 @@
 package com.charlyCorporation.productos.controller;
 
 import com.charlyCorporation.productos.model.Producto;
+import com.charlyCorporation.productos.service.IProdService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,8 @@ public class ProductosController {
     /**
      * Inyeccion de Dependencias
      */
+    @Autowired
+    private IProdService ser;
 
 
 
@@ -50,7 +54,7 @@ public class ProductosController {
             });
             return ResponseEntity.badRequest().body(errores);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.saveProducto(prod));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ser.saveProducto(prod));
     }
 
     /**
@@ -60,10 +64,10 @@ public class ProductosController {
     @GetMapping("/listProductos")
     @PreAuthorize("hasAuthority('READ')")
     private ResponseEntity<?> getProductos(){
-        if (service == null) {
-            System.out.println(">>> ERROR: service es null <<<");
+        if (ser == null) {
+            System.out.println(">>> ERROR: ser es null <<<");
         }
-        return ResponseEntity.ok(service.getProductos());
+        return ResponseEntity.ok(ser.getProductos());
     }
 
     /**
@@ -73,7 +77,7 @@ public class ProductosController {
      */
     @GetMapping("/find/{idProducto}")
     public ResponseEntity<?> findById(@PathVariable Long idProducto){
-        Optional<Producto> prod = service.findProducto(idProducto);
+        Optional<Producto> prod = ser.findProducto(idProducto);
         return prod.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
 
@@ -87,7 +91,7 @@ public class ProductosController {
      */
     @GetMapping("/findByNombre/{nombre}")
     public  ResponseEntity<?> findByNombre(@PathVariable String nombre){
-        Optional<List<Producto>> prod = service.findProductoByNombre(nombre);
+        Optional<List<Producto>> prod = ser.findProductoByNombre(nombre);
         //Mensaje para probar el puerto donde se esta ejecutando el balanceador de carga
         System.out.println("Probando el balanceador: estoy en el puerto = " + serverPort);
         return prod.map(ResponseEntity::ok)
@@ -101,9 +105,9 @@ public class ProductosController {
      */
     @DeleteMapping("/delete/{idProducto}")
     public ResponseEntity<?> deleteProd(@PathVariable Long idProducto){
-        Optional<Producto> p = service.findProducto(idProducto);
+        Optional<Producto> p = ser.findProducto(idProducto);
         if(p.isPresent()){
-            service.deleteProducto(idProducto);
+            ser.deleteProducto(idProducto);
             return ResponseEntity.ok("Exito en la eliminacion del producto");
         }
         return ResponseEntity.notFound().build();
