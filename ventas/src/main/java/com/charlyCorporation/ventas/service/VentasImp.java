@@ -11,6 +11,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,18 +39,21 @@ public class VentasImp implements IVentasService {
     private IproductoClient prodClient;
 
     @Override
+    @Transactional
     public Ventas saveVenta(Ventas ventas) {
 
         return repo.save(ventas);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Ventas> listVentas() {
         List<Ventas> list = repo.findAll();
         return list;
     }
 
     @Override
+    @Transactional
     public Optional<Ventas> find(Long idVenta) {
         Optional<Ventas> venta = repo.findById(idVenta);
         return venta;
@@ -58,6 +62,7 @@ public class VentasImp implements IVentasService {
     @CircuitBreaker(name = "productos", fallbackMethod = "fallbackfindById")
     @Retry(name = "productos")
     @Override
+    @Transactional
     public Optional<VentasDTO> findById(Long idVenta) {
 
         Optional<Ventas> venta = this.find(idVenta);
@@ -95,6 +100,7 @@ public class VentasImp implements IVentasService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         repo.deleteById(id);
     }

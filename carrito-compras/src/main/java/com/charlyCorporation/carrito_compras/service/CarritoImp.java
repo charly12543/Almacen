@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class CarritoImp implements ICarritoService {
      * @param car
      */
     @Override
+    @Transactional
     public Carrito save(Carrito car) {
 
         return repo.save(car);
@@ -47,6 +49,7 @@ public class CarritoImp implements ICarritoService {
      * @param listProductos
      */
     @Override
+    @Transactional
     public Carrito saveCarrito(Long idCarrito,
                                String listProductos) {
 
@@ -70,6 +73,7 @@ public class CarritoImp implements ICarritoService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Carrito> getCarrito() {
         List<Carrito> lista = repo.findAll();
         return lista;
@@ -81,6 +85,7 @@ public class CarritoImp implements ICarritoService {
      * @return
      */
     @Override
+    @Transactional
     public Optional<Carrito> findById(Long idCarrito) {
         Optional<Carrito> car = repo.findById(idCarrito);
         return car;
@@ -96,6 +101,7 @@ public class CarritoImp implements ICarritoService {
     @CircuitBreaker(name = "productos", fallbackMethod = "FallbackAddProdToCarrito")
     @Retry(name = "productos")
     @Override
+    @Transactional
     public Optional<Carrito> addProdToCarrito(long idCarrito, String nomProductos) {
 
         Optional<Carrito> car = this.findById(idCarrito);
@@ -126,6 +132,7 @@ public class CarritoImp implements ICarritoService {
     @CircuitBreaker(name = "productos", fallbackMethod = "FallbackAddProdToCarrito")
     @Retry(name = "productos")
     @Override
+    @Transactional
     public List<ProductosDTO> findNombre(String nombre) {
 
         List<ProductosDTO> prodDTO = client.findByNombre(nombre);
@@ -156,6 +163,7 @@ public class CarritoImp implements ICarritoService {
     @CircuitBreaker(name = "productos", fallbackMethod = "FallbackAddProdToCarrito")
     @Retry(name = "productos")
     @Override
+    @Transactional
     public Carrito deleteProd(long idCarrito, String nomProductos) {
 
         Optional<Carrito> car = this.findById(idCarrito);
@@ -179,6 +187,7 @@ public class CarritoImp implements ICarritoService {
      * @param idCarrito
      */
     @Override
+    @Transactional
     public void deleteAllCar(Long idCarrito) {
         repo.deleteById(idCarrito);
     }
