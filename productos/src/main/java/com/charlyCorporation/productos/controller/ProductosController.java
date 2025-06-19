@@ -1,7 +1,7 @@
 package com.charlyCorporation.productos.controller;
 
 import com.charlyCorporation.productos.model.Producto;
-import com.charlyCorporation.productos.service.IProdService;
+import com.charlyCorporation.productos.service.ProdImp;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +28,7 @@ public class ProductosController {
      * Inyeccion de Dependencias
      */
     @Autowired
-    private IProdService ser;
-
-
+    public ProdImp ser;
 
     /**
      * Inyectamos el valor del puerto de ejecucion en una variable
@@ -44,6 +42,7 @@ public class ProductosController {
      * @return
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('CREATE')")
     public ResponseEntity<?> saveProducto(@Valid @RequestBody Producto prod,
                                           BindingResult result){
         Map<String, String> errores = new HashMap<>();
@@ -63,7 +62,7 @@ public class ProductosController {
      */
     @GetMapping("/listProductos")
     @PreAuthorize("hasAuthority('READ')")
-    private ResponseEntity<?> getProductos(){
+    public ResponseEntity<List<Producto>> getProductos(){
         if (ser == null) {
             System.out.println(">>> ERROR: ser es null <<<");
         }

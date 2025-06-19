@@ -4,6 +4,7 @@ import com.charlyCorporation.productos.model.Producto;
 import com.charlyCorporation.productos.repository.IProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class ProdImp implements IProdService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Producto> getProductos() {
         List<Producto> listaProd = repo.findAll();
         return listaProd;
@@ -36,6 +38,7 @@ public class ProdImp implements IProdService {
      * @param producto
      */
     @Override
+    @Transactional
     public Producto saveProducto(Producto producto) {
         return repo.save(producto);
 
@@ -47,6 +50,7 @@ public class ProdImp implements IProdService {
      * @return
      */
     @Override
+    @Transactional
     public Optional<Producto> findProducto(Long idProducto) {
 
         return repo.findById(idProducto);
@@ -57,6 +61,7 @@ public class ProdImp implements IProdService {
      * @param idProducto
      */
     @Override
+    @Transactional
     public void deleteProducto(Long idProducto) {
         repo.deleteById(idProducto);
 
@@ -71,6 +76,7 @@ public class ProdImp implements IProdService {
      * @return
      */
     @Override
+    @Transactional
     public Producto editProducto(Long idProducto,
                                  String nombre,
                                  String marca,
@@ -93,6 +99,7 @@ public class ProdImp implements IProdService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Optional<List<Producto>> findProductoByNombre(String nombre) {
         List<Producto> producto = repo.findProductoByNombre(nombre);
         if(producto.isEmpty()) {
