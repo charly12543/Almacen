@@ -4,86 +4,32 @@ services:
   eureka-server:
     build:
       context: ./eureka-server
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "8761:8761"
-    networks:
-      - almacen-network
-    environment:
-      - EUREKA_INSTANCE_HOSTNAME=eureka-server
-      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
-      - EUREKA_CLIENT_FETCH_REGISTRY=false
+      dockerfile: ../Dockerfile.eureka-server
 
   productos:
     build:
       context: ./productos
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "8085:8085"
-    networks:
-      - almacen-network
-    depends_on:
-      - eureka-server
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      dockerfile: ../Dockerfile.productos
 
   ventas-service:
     build:
       context: ./ventas
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "8087:8087"
-    networks:
-      - almacen-network
-    depends_on:
-      - eureka-server
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      dockerfile: ../Dockerfile.ventas
 
   carrito-compras:
     build:
       context: ./carrito-compras
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "8086:8086"
-    networks:
-      - almacen-network
-    depends_on:
-      - eureka-server
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      dockerfile: ../Dockerfile.carrito-compras
 
   api-gateway:
     build:
       context: ./api-gateway
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "801:801"
-    networks:
-      - almacen-network
-    depends_on:
-      - eureka-server
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      dockerfile: ../Dockerfile.api-gateway
 
   config-server:
     build:
       context: ./config-server
-      dockerfile: Dockerfile
-    mem_limit: 512m
-    ports:
-      - "8888:8888"
-    networks:
-      - almacen-network
-    depends_on:
-      - eureka-server
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      dockerfile: ../Dockerfile.config-server
 
 networks:
   almacen-network:
