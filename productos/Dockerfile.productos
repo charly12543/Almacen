@@ -1,17 +1,18 @@
-# Etapa 1: Construcción del JAR con Maven
-FROM maven:3.9-eclipse-temurin-17 AS builder
+spring.application.name=productos
+server.address=0.0.0.0
+server.port=8085
 
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+# Base de datos principal (productos)
+spring.jpa.hibernate.ddl-auto=update
 
-# Etapa 2: Imagen liviana para ejecución
-FROM openjdk:17-jdk-slim
+# Usa variable DB_HOST para el host de la base de datos, con localhost por defecto
+spring.datasource.url=jdbc:mysql://${DB_HOST:localhost}:3306/almacen_productos
+spring.datasource.username=${USER_PROD}
+spring.datasource.password=${PASS_PROD}
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app_productos.jar
+# Configuración Eureka: toma la variable de entorno o usa el valor por defecto
+eureka.client.service-url.defaultZone=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}
 
-EXPOSE 8085
-
-ENTRYPOINT ["java", "-jar", "app_productos.jar"]
-LABEL authors="Charly Bustamante"
+# Para que Eureka registre la IP en vez del hostname (útil en Docker)
+eureka.instance.prefer-ip-address=true
