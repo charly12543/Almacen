@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ventas-service
+    name: ventas
   jpa:
     hibernate:
       ddl-auto: update
@@ -12,6 +12,7 @@ spring:
 
 server:
   port: 8087
+  address: 0.0.0.0
 
 eureka:
   client:

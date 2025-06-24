@@ -1,8 +1,10 @@
-
+version: "3.8"
 
 services:
   eureka-server:
-    build: eureka-server
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "8761:8761"
@@ -14,7 +16,9 @@ services:
       - EUREKA_CLIENT_FETCH_REGISTRY=false
 
   productos:
-    build: productos
+    build:
+      context: ./productos
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "8085:8085"
@@ -26,7 +30,9 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   ventas-service:
-    build: ventas
+    build:
+      context: ./ventas
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "8087:8087"
@@ -38,7 +44,9 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   carrito-compras:
-    build: carrito-compras
+    build:
+      context: ./carrito-compras
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "8086:8086"
@@ -50,7 +58,9 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   api-gateway:
-    build: api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "801:801"
@@ -62,7 +72,9 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   config-server:
-    build: config-server
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
     mem_limit: 512m
     ports:
       - "8888:8888"
