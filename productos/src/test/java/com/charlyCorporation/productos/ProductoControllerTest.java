@@ -1,112 +1,122 @@
 package com.charlyCorporation.productos;
 
-import com.charlyCorporation.productos.controller.ProductosController;
 import com.charlyCorporation.productos.model.Producto;
 import com.charlyCorporation.productos.service.ProdImp;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductosController.class)
+/**
+ *  Pruebas de integración (HTTP → Controller → Service → Repository → MySQL local).
+ *  ▸ Cada método se ejecuta dentro de una transacción y se revierte (@Rollback),
+ *    de modo que el estado de la BD queda igual al terminar.
+ *  ▸ No se usa Mockito ni Testcontainers.
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")   // --> lee application-test.properties
+@Transactional @Rollback
 class ProductoControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    /* ---------- Inyecciones ---------- */
+    @Autowired MockMvc mockMvc;
+    @Autowired ProdImp productoService;
+    @Autowired ObjectMapper mapper;
 
-    @MockBean
-    private ProdImp productoService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    /* ---------- CREATE ---------- */
 
     @Test
-    void testGuardarProductoExitosamente() throws Exception {
-        Producto producto = new Producto(null, "Laptop", "Lenovo", 15000.0);
-
-        Mockito.when(productoService.saveProducto(any(Producto.class))).thenReturn(producto);
+    @DisplayName("POST /producto/save ➜ 201 Created (OK)")
+    void guardarProductoExitosamente() throws Exception {
+        Producto dto = new Producto(null, "Laptop", "Lenovo", 15_000.0);
 
         mockMvc.perform(post("/producto/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(producto)))
+                        .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.idProducto", notNullValue()))
                 .andExpect(jsonPath("$.nombre").value("Laptop"))
                 .andExpect(jsonPath("$.marca").value("Lenovo"))
-                .andExpect(jsonPath("$.precio").value(15000.0));
+                .andExpect(jsonPath("$.precio").value(15_000.0));
     }
 
     @Test
-    void testGuardarProductoConCamposInvalidos() throws Exception {
-        // Producto sin nombre ni marca ni precio (inválido)
-        Producto producto = new Producto(null, "", "", null);
+    @DisplayName("POST /producto/save ➜ 400 Bad Request (campos inválidos)")
+    void guardarProductoConCamposInvalidos() throws Exception {
+        Producto invalido = new Producto(null, "", "", null);
 
         mockMvc.perform(post("/producto/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(producto)))
+                        .content(mapper.writeValueAsString(invalido)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.nombre").exists())
                 .andExpect(jsonPath("$.marca").exists())
                 .andExpect(jsonPath("$.precio").exists());
     }
 
-    @Test
-    void testObtenerTodosLosProductos() throws Exception {
-        Producto producto = new Producto(1L, "Tablet", "Samsung", 8000.0);
+    /* ---------- READ ---------- */
 
-        Mockito.when(productoService.getProductos()).thenReturn(List.of(producto));
+    @Test
+    @DisplayName("GET /producto/listProductos ➜ 200 OK lista completa")
+    void obtenerTodosLosProductos() throws Exception {
+        productoService.saveProducto(new Producto(null, "Tablet", "Samsung", 8_000.0));
 
         mockMvc.perform(get("/producto/listProductos"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].nombre").value("Tablet"))
                 .andExpect(jsonPath("$[0].marca").value("Samsung"))
-                .andExpect(jsonPath("$[0].precio").value(8000.0));
+                .andExpect(jsonPath("$[0].precio").value(8_000.0));
     }
 
     @Test
-    void testBuscarProductoPorId() throws Exception {
-        Producto producto = new Producto(1L, "Monitor", "LG", 4000.0);
+    @DisplayName("GET /producto/find/{id} ➜ 200 OK si existe")
+    void buscarProductoPorId() throws Exception {
+        Producto guardado = productoService.saveProducto(
+                new Producto(null, "Monitor", "LG", 4_000.0));
 
-        Mockito.when(productoService.findProducto(1L)).thenReturn(Optional.of(producto));
-
-        mockMvc.perform(get("/producto/find/1"))
+        mockMvc.perform(get("/producto/find/{id}", guardado.getIdProducto()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idProducto").value(guardado.getIdProducto()))
                 .andExpect(jsonPath("$.nombre").value("Monitor"))
-                .andExpect(jsonPath("$.marca").value("LG"));
+                .andExpect(jsonPath("$.marca").value("LG"))
+                .andExpect(jsonPath("$.precio").value(4_000.0));
     }
 
     @Test
-    void testBuscarProductoPorNombre() throws Exception {
-        Producto producto = new Producto(2L, "Mouse", "Logitech", 300.0);
+    @DisplayName("GET /producto/findByNombre/{nombre} ➜ 200 OK lista filtrada")
+    void buscarProductoPorNombre() throws Exception {
+        productoService.saveProducto(new Producto(null, "Mouse", "Logitech", 300.0));
 
-        Mockito.when(productoService.findProductoByNombre("Mouse")).thenReturn(Optional.of(List.of(producto)));
-
-        mockMvc.perform(get("/producto/findByNombre/Mouse"))
+        mockMvc.perform(get("/producto/findByNombre/{nombre}", "Mouse"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nombre").value("Mouse"))
-                .andExpect(jsonPath("$[0].marca").value("Logitech"));
+                .andExpect(jsonPath("$[0].marca").value("Logitech"))
+                .andExpect(jsonPath("$[0].precio").value(300.0));
     }
 
+    /* ---------- DELETE ---------- */
+
     @Test
-    void testEliminarProducto() throws Exception {
-        Producto producto = new Producto(2L, "Teclado", "Microsoft", 500.0);
+    @DisplayName("DELETE /producto/delete/{id} ➜ 200 OK al eliminar")
+    void eliminarProducto() throws Exception {
+        Producto guardado = productoService.saveProducto(
+                new Producto(null, "Teclado", "Microsoft", 500.0));
 
-        Mockito.when(productoService.findProducto(2L)).thenReturn(Optional.of(producto));
-        Mockito.doNothing().when(productoService).deleteProducto(2L);
-
-        mockMvc.perform(delete("/producto/delete/2"))
+        mockMvc.perform(delete("/producto/delete/{id}", guardado.getIdProducto()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Exito en la eliminacion del producto"));
+                .andExpect(content().string(containsStringIgnoringCase("exito")));
     }
 }
