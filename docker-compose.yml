@@ -6,13 +6,17 @@ services:
     container_name: mysql
     environment:
       - MYSQL_DATABASE=almacen_ventas
-      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes           # Permite root sin contraseña
     ports:
       - "3306:3306"
     networks:
       - almacen-network
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 10s
+      retries: 5
 
   eureka-server:
     build:
@@ -23,10 +27,6 @@ services:
       - "8761:8761"
     networks:
       - almacen-network
-    environment:
-      - EUREKA_INSTANCE_HOSTNAME=eureka-server
-      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
-      - EUREKA_CLIENT_FETCH_REGISTRY=false
 
   productos:
     build:
@@ -38,12 +38,16 @@ services:
     networks:
       - almacen-network
     depends_on:
-      - eureka-server
-      - mysql
+      mysql:
+        condition: service_healthy          # espera a que MySQL esté listo
+      eureka-server:
+        condition: service_started
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/almacen_ventas
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   ventas-service:
     build:
@@ -55,12 +59,16 @@ services:
     networks:
       - almacen-network
     depends_on:
-      - eureka-server
-      - mysql
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/almacen_ventas
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   carrito-compras:
     build:
@@ -72,12 +80,16 @@ services:
     networks:
       - almacen-network
     depends_on:
-      - eureka-server
-      - mysql
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/almacen_ventas
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   api-gateway:
     build:
@@ -89,10 +101,11 @@ services:
     networks:
       - almacen-network
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_started
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
   config-server:
     build:
@@ -104,10 +117,11 @@ services:
     networks:
       - almacen-network
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_started
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
 volumes:
   mysql_data:
